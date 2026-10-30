@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous Lead Intelligence | Pune Industrial Corridor</title>
+    <meta name="description" content="Open-Source Autonomous Lead Scraper & AI Outreach System for Pune Industrial Hubs.">
+    
+    <!-- Modern Typography -->
+    <!-- Modern Typography: Inter + JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/ui/style.css?v=20261026_typography_v7">
+</head>
+<body>
+    <!-- Top Navigation -->
+    <header class="app-header">
+        <div class="brand-container">
+            <div class="brand-badge">
+                <span class="pulse-indicator"></span>
+                <span class="brand-icon"><img src="/ui/icons/lightning.png" alt="Lead Intelligence" class="brand-icon-img"></span>
+            </div>
+            <div>
+                <h1 class="brand-title">Lead Intelligence AI</h1>
+                <p class="brand-subtitle">Pune Industrial Corridor • SAP Integration, Power BI Dashboards & Industrial Automation</p>
+            </div>
+        </div>
+
+        <div class="header-actions">
+            <button class="btn btn-secondary btn-sm" id="jobs-scrape-btn" title="Discover Pune manufacturing plants actively hiring for SAP, Power BI, and PLC Automation">
+                <span>Job Intent</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" id="enrich-all-btn" title="Enrich all leads with Decision Makers, LinkedIn, MCA Financials, and Technographics">
+                <span>Enrich All</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" id="run-drip-btn" title="Run automated Day 1 / Day 3 / Day 7 follow-up sequences across scheduled leads">
+                <span>Run Drip</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" id="settings-btn" onclick="openAlertSettingsModal()" title="Configure 24/7 Automated Telegram & Email Alerts">
+                <span>Settings</span>
+            </button>
+            <button class="btn btn-secondary btn-sm" id="bulk-scrape-btn" title="Harvest leads across all 6 Pune industrial zones">
+                <span>Harvest All</span>
+            </button>
+            <a href="/api/export" class="btn btn-secondary btn-sm" id="export-btn" title="Download qualified leads as CSV with enterprise contacts & financials">
+                <span>Export CSV</span>
+            </a>
+            <div class="model-badge" title="Powered by Google Gemini Cloud & Heuristic Engine">
+                <span class="gemini-sparkle"><img src="/ui/icons/sparkle.png" alt="Gemini AI" class="ui-icon-badge"></span>
+                <span id="ai-model-tag">Gemini Enterprise AI</span>
+            </div>
+            <!-- Lighting Theme Selector on Far Right Corner (Icon Only, No Text) -->
+            <div class="theme-dropdown-container" id="theme-dropdown-container">
+                <button type="button" class="theme-icon-btn" id="theme-toggle-btn" title="Lighting Theme (Active: Lightning) - Click to Switch" aria-label="Switch Lighting Theme">
+                    <img src="/ui/icons/theme-lighting.png" alt="Lighting Theme" class="theme-btn-icon" id="theme-btn-icon">
+                </button>
+                <div class="theme-menu-popup" id="theme-menu-popup">
+                    <button type="button" class="theme-option-btn active" data-theme="lightning">
+                        <img src="/ui/icons/theme-lighting.png" alt="Lightning">
+                        <span>Lightning</span>
+                    </button>
+                    <button type="button" class="theme-option-btn" data-theme="white">
+                        <img src="/ui/icons/theme-white.png" alt="Clean White">
+                        <span>Clean White</span>
+                    </button>
+                    <button type="button" class="theme-option-btn" data-theme="warm">
+                        <img src="/ui/icons/theme-warm.png" alt="Warm Linen">
+                        <span>Warm Linen</span>
+                    </button>
+                    <button type="button" class="theme-option-btn" data-theme="slate">
+                        <img src="/ui/icons/theme-slate.png" alt="Soft Slate">
+                        <span>Soft Slate</span>
+                    </button>
+                </div>
+                <select id="theme-selector" class="theme-select" style="display: none;" aria-label="Select UI Light Theme">
+                    <option value="lightning">Lightning</option>
+                    <option value="white">Clean White</option>
+                    <option value="warm">Warm Linen</option>
+                    <option value="slate">Soft Slate</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-container">
+        <!-- KPI Metrics Ribbon -->
+        <section class="stats-ribbon">
+            <div class="stat-card" id="card-total">
+                <div class="stat-meta">
+                    <span class="stat-label">Total Leads</span>
+                    <span class="stat-icon"><img src="/ui/icons/building.png" alt="Total Leads" class="ui-icon-stat"></span>
+                </div>
+                <div class="stat-value" id="stat-total">0</div>
+                <span class="stat-hint">Across all Pune hubs</span>
+            </div>
+
+            <div class="stat-card stat-high" id="card-high">
+                <div class="stat-meta">
+                    <span class="stat-label">High Priority (≥75)</span>
+                    <span class="stat-icon"><img src="/ui/icons/fire.png" alt="High Priority" class="ui-icon-stat"></span>
+                </div>
+                <div class="stat-value" id="stat-high">0</div>
+                <span class="stat-hint">SAP, Power BI & Automation</span>
+            </div>
+
+            <div class="stat-card stat-medium" id="card-medium">
+                <div class="stat-meta">
+                    <span class="stat-label">Medium Priority (45-74)</span>
+                    <span class="stat-icon"><img src="/ui/icons/bolt.png" alt="Medium Priority" class="ui-icon-stat"></span>
+                </div>
+                <div class="stat-value" id="stat-medium">0</div>
+                <span class="stat-hint">Automation & BI Pipeline</span>
+            </div>
+
+            <div class="stat-card stat-alerted clickable-stat-card" id="card-alerted" title="Click to view full list of dispatched alerts & sent information" style="cursor: pointer; position: relative;">
+                <div class="stat-meta">
+                    <span class="stat-label">Alerts Dispatched</span>
+                    <span class="stat-icon"><img src="/ui/icons/rocket.png" alt="Alerts Dispatched" class="ui-icon-stat"></span>
+                </div>
+                <div class="stat-value" id="stat-alerted">0</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="stat-hint">Delivered via Telegram & Email</span>
+                    <span style="font-size: 0.82rem; color: #38bdf8; font-weight: 700; text-decoration: underline;">View List &rarr;</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 24/7 Autonomous Auto-Pilot Command Center -->
+        <section class="autopilot-banner">
+            <div class="autopilot-left">
+                <div class="autopilot-status-badge">
+                    <span class="radar-dot" id="autopilot-dot"></span>
+                    <span class="autopilot-status-text" id="autopilot-status-text">Daily Auto-Pilot Active (Auto-Dispatches High Priority Leads to Telegram & Email)</span>
+                </div>
+                <div class="autopilot-meta-row">
+                    <span class="autopilot-meta-item">
+                        <strong>Last Daily Sweep:</strong> <span id="ap-last-run">Never</span>
+                    </span>
+                    <span class="autopilot-meta-sep">•</span>
+                    <span class="autopilot-meta-item">
+                        <strong>Next Daily Sweep:</strong> <span id="ap-next-run">Calculating...</span>
+                    </span>
+                    <span class="autopilot-meta-sep">•</span>
+                    <span class="autopilot-meta-item">
+                        <strong>Auto-Harvested:</strong> <span id="ap-leads-count" style="color:var(--priority-high); font-weight:700;">0 leads</span>
+                    </span>
+                    <span class="autopilot-meta-sep">•</span>
+                    <span class="autopilot-meta-item">
+                        <strong>High Priority Alerts:</strong> <span style="color:#38bdf8; font-weight:700;"><img src="/ui/icons/bolt.png" alt="Auto" class="ui-icon-badge"> Auto-Dispatched to Phone</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="autopilot-right">
+                <div class="autopilot-control-group">
+                    <label for="ap-interval-select" class="ap-control-label">Schedule:</label>
+                    <select id="ap-interval-select" class="ap-select">
+                        <option value="24" selected>Daily Schedule (Every 24 Hours)</option>
+                        <option value="12">Twice Daily (Every 12 Hours)</option>
+                        <option value="6">Every 6 Hours</option>
+                        <option value="2">Every 2 Hours</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-secondary btn-sm" id="ap-trigger-now-btn" title="Run an autonomous discovery sweep right now">
+                    <span><img src="/ui/icons/bolt.png" alt="Run" class="ui-icon-btn"> Run Sweep Now</span>
+                </button>
+
+                <button class="btn btn-toggle-ap active" id="ap-toggle-btn" title="Enable or disable 24/7 autonomous background discovery">
+                    <span class="toggle-icon">●</span>
+                    <span class="toggle-text" id="ap-toggle-text">Auto-Pilot ON</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Command Deck / Scraper Control -->
+        <section class="control-deck">
+            <div class="deck-header">
+                <div>
+                    <h2 class="deck-title">Area Discovery & Targeted Scraper</h2>
+                    <p class="deck-subtitle">Search Google Maps & MIDC registries for Pune manufacturing plants</p>
+                </div>
+                <div class="active-area-indicator">
+                    <span class="area-indicator-label">Active Target Area:</span>
+                    <span class="area-indicator-val" id="active-target-display">All Pune Hubs</span>
+                </div>
+            </div>
+
+            <!-- Core Services Preset Selection -->
+            <div class="service-presets-row">
+                <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-right: 0.25rem;">
+                    Core Services:
+                </span>
+                <button type="button" class="service-chip-btn active" data-service="all" id="chip-all">
+                    <img src="/ui/icons/sparkle.png" alt="All Services" class="ui-icon-badge"> All Services (SAP, Power BI & Automation)
+                </button>
+                <button type="button" class="service-chip-btn" data-service="sap" id="chip-sap">
+                    <img src="/ui/icons/sap.png" alt="SAP" class="ui-icon-badge"> SAP & ERP Integration
+                </button>
+                <button type="button" class="service-chip-btn" data-service="powerbi" id="chip-powerbi">
+                    <img src="/ui/icons/chart.png" alt="Power BI" class="ui-icon-badge"> Power BI Dashboards
+                </button>
+                <button type="button" class="service-chip-btn" data-service="automation" id="chip-automation">
+                    <img src="/ui/icons/robot.png" alt="Automation" class="ui-icon-badge"> Industrial Automation & MES
+                </button>
+            </div>
+
+            <div class="search-bar-row">
+                <div class="input-wrap search-query-wrap">
+                    <span class="input-icon"><img src="/ui/icons/search.png" alt="Search" class="ui-icon-inline"></span>
+                    <input type="text" id="search-query" 
+                           value="Manufacturing companies in Pune MIDC Chakan" 
+                           placeholder="e.g. Industrial Automation Chakan, SAP ERP manufacturing Bhosari, Power BI dashboards Pune...">
+                </div>
+
+                <div class="input-wrap limit-wrap">
+                    <label for="max-results">Limit</label>
+                    <input type="number" id="max-results" value="5" min="1" max="50">
+                </div>
+
+                <button class="btn btn-primary" id="trigger-btn">
+                    <span class="btn-icon"><img src="/ui/icons/bolt.png" alt="Execute" class="ui-icon-btn"></span>
+                    <span class="btn-text">Execute AI Scraper</span>
+                    <div class="spinner" id="btn-loader"></div>
+                </button>
+            </div>
+
+            <!-- Live Pipeline Tracker Bar -->
+            <div class="pipeline-progress-bar" id="pipeline-progress-card">
+                <div class="progress-info">
+                    <span class="progress-pulse"></span>
+                    <span class="progress-text" id="progress-status-text">Pipeline Idle</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AREA WISE FILTER TABS -->
+        <section class="area-navigator-section">
+            <div class="area-bar-label">
+                <span><img src="/ui/icons/location.png" alt="Location" class="ui-icon-badge"> Filter by Pune Industrial Area:</span>
+                <span class="area-hint-text">Click any hub to view only leads from that area</span>
+            </div>
+            <div class="area-tabs" id="area-tabs">
+                <button class="area-tab-btn active" data-area="All">
+                    <span class="area-name">All Areas</span>
+                    <span class="area-badge" id="badge-all">0</span>
+                </button>
+                <button class="area-tab-btn" data-area="Chakan MIDC">
+                    <span class="area-name">Chakan MIDC</span>
+                    <span class="area-badge" id="badge-chakan">0</span>
+                </button>
+                <button class="area-tab-btn" data-area="Bhosari MIDC">
+                    <span class="area-name">Bhosari MIDC</span>
+                    <span class="area-badge" id="badge-bhosari">0</span>
+                </button>
+                <button class="area-tab-btn" data-area="Talegaon MIDC">
+                    <span class="area-name">Talegaon MIDC</span>
+                    <span class="area-badge" id="badge-talegaon">0</span>
+                </button>
+                <button class="area-tab-btn" data-area="Ranjangaon MIDC">
+                    <span class="area-name">Ranjangaon MIDC</span>
+                    <span class="area-badge" id="badge-ranjangaon">0</span>
+                </button>
+                <button class="area-tab-btn" data-area="Hadapsar">
+                    <span class="area-name">Hadapsar</span>
+                    <span class="area-badge" id="badge-hadapsar">0</span>
+                </button>
+                <button class="area-tab-btn" data-area="Pimpri-Chinchwad">
+                    <span class="area-name">Pimpri-Chinchwad</span>
+                    <span class="area-badge" id="badge-pimpri">0</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Pipeline Stream & Filter Bar -->
+        <section class="leads-section">
+            <div class="leads-toolbar">
+                <div class="filter-tabs">
+                    <button class="tab-btn active" data-filter="All">
+                        <span>All Priority</span>
+                        <span class="tab-count-badge" id="count-all">0</span>
+                    </button>
+                    <button class="tab-btn tab-high" data-filter="High">
+                        <span>High (≥75)</span>
+                        <span class="tab-count-badge" id="count-high">0</span>
+                    </button>
+                    <button class="tab-btn tab-medium" data-filter="Medium">
+                        <span>Medium (45-74)</span>
+                        <span class="tab-count-badge" id="count-medium">0</span>
+                    </button>
+                    <button class="tab-btn tab-low" data-filter="Low">
+                        <span>Low (&lt;45)</span>
+                        <span class="tab-count-badge" id="count-low">0</span>
+                    </button>
+                    <button class="tab-btn tab-alerted" data-filter="Alerted" style="border-color: rgba(56, 189, 248, 0.4); color: #38bdf8;">
+                        <span><img src="/ui/icons/rocket.png" alt="Dispatched" class="ui-icon-badge"> Dispatched</span>
+                        <span class="tab-count-badge" id="count-alerted">0</span>
+                    </button>
+                </div>
+
+                <div class="toolbar-right">
+                    <div class="input-wrap filter-search-wrap">
+                        <span class="input-icon"><img src="/ui/icons/search.png" alt="Search" class="ui-icon-inline"></span>
+                        <input type="text" id="filter-search" placeholder="Search by company, tech, or address...">
+                    </div>
+                    <button class="btn btn-secondary btn-sm" id="refresh-btn">
+                        <span><img src="/ui/icons/refresh.png" alt="Refresh" class="ui-icon-btn"> Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Active Filter Status & Count Bar -->
+            <div class="active-filter-summary" id="active-filter-summary">
+                <div class="filter-summary-info">
+                    <span>Showing </span>
+                    <strong id="active-result-count" class="summary-count">0</strong>
+                    <span> leads in </span>
+                    <strong id="active-area-name" class="summary-area">All Areas</strong>
+                    <span id="active-prio-text" class="summary-prio"></span>
+                </div>
+                <div>
+                    <button id="clear-filters-btn" class="btn btn-secondary btn-sm" style="display: none;">
+                        <span>Reset to All</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Leads Cards Container -->
+            <div class="leads-grid" id="leads-grid">
+                <!-- Dynamically populated -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 0. Dedicated Lead Detail Card Modal (Opens when clicking any specific lead card) -->
+    <div class="modal-backdrop" id="lead-detail-modal">
+        <div class="modal-content lead-detail-card-modal" style="max-width: 720px;">
+            <div class="modal-header">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                        <span class="card-area-pill" id="detail-card-area"><img src="/ui/icons/location.png" alt="Area" class="ui-icon-badge"> Area</span>
+                        <span class="card-score-pill" id="detail-card-score"><img src="/ui/icons/star.png" alt="Score" class="ui-icon-badge"> Score</span>
+                    </div>
+                    <h3 class="modal-title" id="detail-card-company-name">Company Name</h3>
+                    <div class="card-meta-links" id="detail-card-meta-links" style="margin-top: 0.3rem;">
+                        <!-- Website, rating, source -->
+                    </div>
+                </div>
+                <button class="modal-close" id="detail-card-close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body" id="detail-card-body" style="gap: 1.15rem;">
+                <!-- Dynamically populated detail card content -->
+            </div>
+
+            <div class="modal-footer" style="padding: 1rem 1.65rem; border-top: 1px solid var(--border-subtle); display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <div style="font-size: 0.82rem; color: var(--text-dim); font-weight: 600;" id="detail-card-id-tag">
+                    Lead Intelligence Card
+                </div>
+                <div class="card-btn-group" id="detail-card-actions">
+                    <!-- Action buttons -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 1. Client Outreach Pitch Modal (for reaching out to client) -->
+    <div class="modal-backdrop" id="pitch-modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" id="modal-company-name"><img src="/ui/icons/chat.png" alt="Pitch" class="ui-icon-modal-title"> Client Outreach Pitch</h3>
+                    <p class="modal-subtitle" id="modal-lead-meta">Tailored B2B Proposal ready to send to prospective client</p>
+                </div>
+                <button class="modal-close" id="modal-close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="pitch-view">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <label class="pitch-field-label" style="margin: 0; color: #7dd3fc; font-weight: 700;">
+                            <img src="/ui/icons/mail.png" alt="Proposal" class="ui-icon-badge"> Tailored B2B Proposal (BrownBox Innovation Services)
+                        </label>
+                        <span style="font-size: 0.75rem; color: #38bdf8; font-weight: 600; background: rgba(56,189,248,0.1); padding: 2px 8px; border-radius: 4px;">
+                            Client-Facing Pitch
+                        </span>
+                    </div>
+                    <textarea class="pitch-textarea" id="email-text-box" rows="11" style="line-height: 1.6; font-size: 0.88rem; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;"></textarea>
+                    
+                    <div class="pitch-actions" style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem;">
+                        <button class="btn" id="send-pitch-tg-btn" style="background: #2563eb; color: #ffffff; font-weight: 700; padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                            <img src="/ui/icons/telegram.png" alt="Telegram" class="ui-icon-btn">
+                            <span>Send to My Telegram</span>
+                        </button>
+                        <button class="btn btn-primary" id="open-mail-btn" style="display: flex; align-items: center; gap: 0.4rem;">
+                            <img src="/ui/icons/mail.png" alt="Email" class="ui-icon-btn">
+                            <span>Open in Mail Client</span>
+                        </button>
+                        <button class="btn btn-secondary" id="copy-email-btn" style="display: flex; align-items: center; gap: 0.4rem;">
+                            <img src="/ui/icons/copy.png" alt="Copy" class="ui-icon-btn">
+                            <span>Copy Pitch</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Internal Lead Intelligence Alert Modal (for team/phone alerts) -->
+    <div class="modal-backdrop" id="alert-modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" id="alert-modal-company-name"><img src="/ui/icons/bell.png" alt="Alert" class="ui-icon-modal-title"> Lead Intelligence Alert</h3>
+                    <p class="modal-subtitle" id="alert-modal-lead-meta">Executive briefing and instant mobile alerts for your team</p>
+                </div>
+                <button class="modal-close" id="alert-modal-close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Top Snapshot Grid -->
+                <div id="alert-summary-grid" class="alert-summary-grid">
+                    <div class="alert-summary-card">
+                        <div class="summary-card-label">Score & Priority</div>
+                        <div id="alert-meta-score" class="summary-card-val prio-high">95/100 (High)</div>
+                    </div>
+                    <div class="alert-summary-card">
+                        <div class="summary-card-label">Industrial Area</div>
+                        <div id="alert-meta-area" class="summary-card-val">Chakan MIDC</div>
+                    </div>
+                    <div class="alert-summary-card">
+                        <div class="summary-card-label">Target Persona</div>
+                        <div id="alert-meta-persona" class="summary-card-val persona">Head of IT / Plant</div>
+                    </div>
+                    <div class="alert-summary-card">
+                        <div class="summary-card-label">Contact Phone</div>
+                        <div id="alert-meta-phone" class="summary-card-val phone">Available</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="briefing-header-row">
+                        <label class="pitch-field-label">
+                            <img src="/ui/icons/alert.png" alt="Briefing" class="ui-icon-badge"> Formatted Lead Briefing (Dispatched to Phone & Email)
+                        </label>
+                        <span class="briefing-badge">
+                            Internal Intelligence
+                        </span>
+                    </div>
+                    <textarea class="pitch-textarea" id="alert-briefing-box" rows="9"></textarea>
+                </div>
+
+                <div class="pitch-actions" style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem;">
+                    <button class="btn" id="alert-send-tg-btn" style="background: #2563eb; color: #ffffff; font-weight: 700; padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
+                        <img src="/ui/icons/telegram.png" alt="Telegram" class="ui-icon-btn">
+                        <span>Send to My Telegram</span>
+                    </button>
+                    <button class="btn btn-primary" id="alert-send-email-btn" style="display: flex; align-items: center; gap: 0.5rem;">
+                        <img src="/ui/icons/mail.png" alt="Email" class="ui-icon-btn">
+                        <span>Email Briefing to My Team</span>
+                    </button>
+                    <button class="btn btn-secondary" id="alert-copy-btn" style="display: flex; align-items: center; gap: 0.4rem;">
+                        <img src="/ui/icons/copy.png" alt="Copy" class="ui-icon-btn">
+                        <span>Copy Briefing</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Dispatched Alerts Log Modal (List of sent alerts info) -->
+    <div class="modal-backdrop" id="dispatched-modal">
+        <div class="modal-content" style="max-width: 860px; max-height: 85vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="flex-shrink: 0;">
+                <div>
+                    <h3 class="modal-title" id="dispatched-modal-title"><img src="/ui/icons/rocket.png" alt="Dispatched" class="ui-icon-modal-title"> Dispatched Alerts Log</h3>
+                    <p class="modal-subtitle">Sent lead intelligence briefings delivered to Telegram (@BBI_leads_alert_bot) & Email</p>
+                </div>
+                <button class="modal-close" id="dispatched-modal-close-btn">&times;</button>
+            </div>
+
+            <div class="dispatched-filter-bar">
+                <div class="dispatched-count-wrap">
+                    Total Dispatched: <strong id="dispatched-count-badge">0 Leads</strong>
+                </div>
+                <div class="dispatched-search-wrap">
+                    <input type="text" id="dispatched-search-input" placeholder="Search dispatched companies..." class="pitch-textarea dispatched-search-box">
+                    <button class="btn btn-secondary btn-sm" id="dispatched-view-grid-btn" title="View these leads in the main dashboard grid">
+                        <span>View in Main Grid</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="modal-body" style="overflow-y: auto; flex: 1; padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1rem;" id="dispatched-list-container">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 24/7 Automated Notification Settings Modal -->
+    <div class="modal-backdrop" id="settings-modal">
+        <div class="modal-content" style="max-width: 620px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title"><img src="/ui/icons/settings.png" alt="Settings" class="ui-icon-modal-title"> Automated Notification Settings</h3>
+                    <p class="modal-subtitle">Auto-Pilot sends instant alerts to these channels when High-Priority leads are found</p>
+                </div>
+                <button class="modal-close" id="settings-close-btn" onclick="closeAlertSettingsModal()">&times;</button>
+            </div>
+
+            <div class="modal-body" style="gap: 1.5rem;">
+                <!-- Channel 1: Telegram Bot (Primary Mobile) -->
+                <div class="settings-channel-card" style="background: rgba(34, 158, 217, 0.06); border: 1px solid rgba(34, 158, 217, 0.35); border-radius: var(--radius-sm); padding: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: #7dd3fc;">
+                            <img src="/ui/icons/telegram.png" alt="Telegram" class="ui-icon-badge">
+                            <span>Direct Telegram Mobile Alerts (@BBI_leads_alert_bot)</span>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; cursor: pointer; color: var(--text-muted);">
+                            <input type="checkbox" id="cfg-tg-enabled" checked> Enable Telegram
+                        </label>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem;">
+                        <div>
+                            <label class="pitch-field-label">Telegram Bot Token</label>
+                            <input type="text" id="cfg-tg-token" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none;" value="8680295303:AAE4vvvi0Saw-sIj5uQ0rPU0BM7C89tduiE">
+                        </div>
+                        <div>
+                            <label class="pitch-field-label">Telegram Chat ID</label>
+                            <input type="text" id="cfg-tg-chatid" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none;" value="6858620574">
+                        </div>
+                    </div>
+
+                    <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.6rem; line-height: 1.4; background: rgba(0,0,0,0.3); padding: 0.5rem 0.75rem; border-radius: 4px; display: flex; align-items: center; gap: 6px;">
+                        <img src="/ui/icons/check.png" class="ui-icon-inline" alt=""> <strong>Connected:</strong> Alerts will be sent directly to your phone via <strong>@BBI_leads_alert_bot</strong>.
+                    </div>
+                </div>
+
+                <!-- Channel 2: Email -->
+                <div class="settings-channel-card" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: var(--radius-sm); padding: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: #93c5fd;">
+                            <img src="/ui/icons/mail.png" alt="Email" class="ui-icon-badge">
+                            <span>Direct Email Alerts (Gmail / SMTP)</span>
+                        </div>
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; cursor: pointer; color: var(--text-muted);">
+                            <input type="checkbox" id="cfg-email-enabled" checked> Enable Email
+                        </label>
+                    </div>
+
+                    <div style="margin-bottom: 0.75rem;">
+                        <label class="pitch-field-label">Send Lead Alerts To (Your Email)</label>
+                        <input type="email" id="cfg-email-to" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none;" placeholder="e.g. sales@yourcompany.com">
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div>
+                            <label class="pitch-field-label">SMTP Host</label>
+                            <input type="text" id="cfg-smtp-host" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none;" value="smtp.gmail.com">
+                        </div>
+                        <div>
+                            <label class="pitch-field-label">SMTP Port</label>
+                            <input type="number" id="cfg-smtp-port" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none;" value="587">
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div>
+                            <label class="pitch-field-label">SMTP Username (Sender)</label>
+                            <input type="text" id="cfg-smtp-user" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none;" placeholder="e.g. your_email@gmail.com">
+                        </div>
+                        <div>
+                            <label class="pitch-field-label">App Password</label>
+                            <input type="password" id="cfg-smtp-pass" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none;" placeholder="Gmail 16-digit App Password">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pitch-actions" style="margin-top: 0.25rem;">
+                    <button class="btn btn-secondary" id="cfg-test-btn" style="flex: 1;">
+                        <span><img src="/ui/icons/flask.png" alt="Test" class="ui-icon-btn"> Send Test Alert Now</span>
+                    </button>
+                    <button class="btn btn-primary" id="cfg-save-btn" style="flex: 1;">
+                        <span><img src="/ui/icons/save.png" alt="Save" class="ui-icon-btn"> Save Settings</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Drip Campaign Sequence Modal -->
+    <div class="modal-backdrop" id="drip-modal">
+        <div class="modal-card" style="max-width: 720px;">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" id="drip-modal-company-name">Company Name</h3>
+                    <p class="modal-subtitle">Enterprise Outreach Drip Sequence (Day 1 • Day 3 • Day 7)</p>
+                </div>
+                <button class="modal-close" id="drip-modal-close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="drip-status-row">
+                    <div class="drip-status-col">
+                        <span class="drip-label">Status:</span>
+                        <span id="drip-status-badge" class="drip-val status-active">Active</span>
+                    </div>
+                    <div class="drip-status-col">
+                        <span class="drip-label">Current Step:</span>
+                        <span id="drip-step-badge" class="drip-val step-count">Step 1 / 3</span>
+                    </div>
+                    <div class="drip-status-col">
+                        <span class="drip-label">Next Auto Follow-up:</span>
+                        <span id="drip-next-date" class="drip-val follow-up-date">In 2 Days</span>
+                    </div>
+                </div>
+
+                <!-- Sequence Step Tabs -->
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                    <button class="btn btn-secondary btn-sm drip-step-tab active" data-step="1" id="drip-tab-1" style="flex: 1;">
+                        Day 1: 3-Service Intro
+                    </button>
+                    <button class="btn btn-secondary btn-sm drip-step-tab" data-step="2" id="drip-tab-2" style="flex: 1;">
+                        Day 3: Chakan Case Study
+                    </button>
+                    <button class="btn btn-secondary btn-sm drip-step-tab" data-step="3" id="drip-tab-3" style="flex: 1;">
+                        Day 7: Plant Audit Invite
+                    </button>
+                </div>
+
+                <div style="margin-bottom: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+                        <label class="pitch-field-label" style="margin-bottom: 0;">Target Recipient Email</label>
+                        <span style="font-size: 0.78rem; color: var(--text-dim);" id="drip-email-hint">Enter custom or test email if needed</span>
+                    </div>
+                    <input type="email" id="drip-recipient-email" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none; font-weight: 500; font-size: 0.88rem;" placeholder="e.g. operations@badvegroup.com or your test email">
+                </div>
+
+                <div style="margin-bottom: 0.75rem;">
+                    <label class="pitch-field-label">Subject Line</label>
+                    <input type="text" id="drip-subject-box" class="pitch-textarea" style="height: 38px; padding: 0.5rem 0.75rem; resize: none; font-weight: 600;" readonly>
+                </div>
+
+                <div style="margin-bottom: 1rem;">
+                    <label class="pitch-field-label">Outreach Message Body</label>
+                    <textarea id="drip-body-box" class="pitch-textarea" style="height: 180px; font-size: 0.9rem; line-height: 1.6;" readonly></textarea>
+                </div>
+
+                <div class="pitch-actions">
+                    <button class="btn btn-secondary" id="drip-copy-btn">
+                        <span><img src="/ui/icons/copy.png" alt="Copy" class="ui-icon-btn"> Copy Message</span>
+                    </button>
+                    <button class="btn btn-primary" id="drip-advance-now-btn" style="flex: 1;">
+                        <span><img src="/ui/icons/rocket.png" alt="Dispatch" class="ui-icon-btn"> Dispatch & Advance Step</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="/ui/app.js?v=20261026_drip_v6"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+playwright
+google-genai
+google-generativeai
+httpx
+beautifulsoup4
+sqlalchemy
+psycopg2-binary
+pgvector
+python-dotenv
+requests
